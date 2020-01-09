@@ -8,7 +8,7 @@ def show_webcam(mirror=False):
             img = cv2.flip(img, 1)
         cv2.imshow('Leitor', img)
         if cv2.waitKey(1) == 27:
-            break  # esc to quit
+            break 
     cv2.destroyAllWindows()
 
 

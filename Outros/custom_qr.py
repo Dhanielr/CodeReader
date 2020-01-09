@@ -1,3 +1,4 @@
+#!/home/dhaniel/anaconda3/envs/py37env/bin/python
 # -*- coding: utf-8 -*-
 # Importando as libs
 from imutils.video import VideoStream
@@ -8,17 +9,23 @@ import imutils
 import time
 import cv2
 import pygame
+import os
+from pynput.keyboard import Key, Controller
+
+keyboard = Controller()
 
 # Construir o analisador de argumentos e analisar os argumentos
 ap = argparse.ArgumentParser()
 ap.add_argument("-o", "--output", type=str, default="resultado.csv", help="caminho que será salvo o arquivo .CSV") # esse é o arquivo que vai ser salvo com os dados que foram lidos.
 args = vars(ap.parse_args())
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 # Iniciar a stream (iniciar a webcam) e permitir que o sensor da câmera aqueça
 print("[INFO] Iniciando o stream e o arquivo .CSV")
+
 vs = VideoStream(src=0).start()
-# vs = VideoStream(usePiCamera=True).start()
-time.sleep(0.50)
+time.sleep(2)
 
 # abra o arquivo CSV de saída para gravar e inicializar o conjunto de
 # códigos de barras (qr code) encontrados até agora
@@ -48,33 +55,47 @@ while True:
         barcodeType = barcode.type
 
         # desenha os dados do código de barras e o tipo de código de barras na imagem
-        text = "{}".format(barcodeData)
-        print(text)
+        text = f"{barcodeData}"
         cv2.putText(frame, '', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         # eu não fiz a impressão do texto que contém os dados e etc... caso vc queira mostrar
         # basta trocar o '' por text, ficaria assim \/
-        text = "{} ({})".format(barcodeData, barcodeType)
-        cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        # text = f"{barcodeData} ({barcodeType})"
+        # cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
         # se o texto do código de barras não estiver no nosso arquivo CSV, vai escrever
         # a data e a hora + código de barras no disco e atualizar os dados
 
         # eu não quis a data e a hora, caso vc queira, basta usar esse código abaixo \/
-        csv.write("{},{}\n".format(datetime.datetime.now(), barcodeData))
+        # csv.write("{},{}\n".format(datetime.datetime.now(), barcodeData))
 
-        if barcodeData not in found:
-            # aqui é opcional, eu coloquei só pra avisar que o resultado foi guardado
-            # o pygame é responsável por fazer um som tocar
-            # pygame.mixer.init()
-            # pygame.mixer.music.load('success.wav')
-            # pygame.mixer.music.play()
-            # fim da musica
+        pygame.mixer.init()
+        pygame.mixer.music.load(f'{BASE_DIR}/success.wav')
+        pygame.mixer.music.play()
+        time.sleep(0.5)
+        # print(text)
+        keyboard.type(f'{text}\n')
+        time.sleep(0.5)
+        csv.write(f"{barcodeData}\n")
+        csv.flush()
+        found.clear()
+        found.add(barcodeData)
 
-            csv.write("{}\n".format(barcodeData))
-            csv.flush()
+        # if barcodeData not in found:
+        #     # aqui é opcional, eu coloquei só pra avisar que o resultado foi guardado
+        #     # o pygame é responsável por fazer um som tocar
+        #     pygame.mixer.init()
+        #     pygame.mixer.music.load(f'{BASE_DIR}/success.wav')
+        #     pygame.mixer.music.play()
+        #     # fim da musica
+            
+        #     # print(text)
+        #     keyboard.type(f'{barcodeData}')
 
-            found.clear()
-            found.add(barcodeData)
+        #     csv.write(f"{barcodeData}\n")
+        #     csv.flush()
+
+        #     found.clear()
+        #     found.add(barcodeData)
 
     # Título do Frame
     cv2.imshow("Registro de Ponto", frame)
